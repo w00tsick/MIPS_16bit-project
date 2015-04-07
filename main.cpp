@@ -11,8 +11,84 @@
 #include <stdlib.h>
 
 //Functions
+int InstructionMemory(int pc) {
+	return instructions[pc];
+}
+
+//separate function for writing?
+//write_flag global variable or argument?
+void RegisterFile(int Rs, int Rt, int write_reg, int write_flag, int write_data) {
+	if (write_flag == 0){	
+		//convert rs and rt into integers
+		Rs = reg_to_int(Rs);
+		Rt = reg_to_int(Rt);
+		
+		//outputs be global vars
+		reg_out1 = registers[Rs];
+		reg_out2 = registers[Rt];
+	}
+	else {
+		registers[write_reg] = write_data;
+	}
+	return;
+}
+
+int DataMemory(int reg_input, int write_data, int write_flag, int read_flag){
+	if (read_flag == 1) {
+		output = memory[reg_input];
+	}
+	else if (write_flag == 1) {
+		memory[reg_input] = write_data; 
+	}
+	
+	return output;
+}
+
+int MUX(int input0, int input1, int control){
+	if (control == 0)
+		return input0;
+	else 
+		return input1;
+}
+
+//Buffer structs
+struct IFID {
+	int instruct;  //make this a string?
+	**int IFID_write_flag;
+}
+
+struct IDEX {
+	int WB_flag;
+	int M_flag;
+	int EX_flag;
+	int reg_out1;
+	int reg_out2;
+	int IFID_rs;
+	int IFID_rt;
+	int IFID_rd;
+}
+
+struct EXMEM {
+	int WB_flag;
+	int M_flag;
+	int ALU_out;
+	int ALU_mux_out;
+}
+
+struct MEMWB {
+	int WB_flag;
+	int data_mem_out;
+	
+}
+
 
 //Global Variables
+int PC, reg_out1, reg_out2;
+int MAX_INSTRUCTIONS = 1000;
+int MAX_MEMORY = 1024;
+int instructions[MAX_INSTRUCTIONS];   //array of strings might be easier
+int registers[8];
+int memory[MAX_MEMORY];
 
 using namespace std;
 
@@ -63,11 +139,19 @@ int main() {
 }
 
 void fetch(){
-    
+    instr = InstructionMemory(PC);
 }
 
 void decode(){
-    
+    opcode = IFID.instruction[0:3];
+	Control(opcode);
+	
+	Rs = IFID.instruction[3:5];
+	Rt = IFID.instruction[6:8];
+	Rd = IFID.instruction[9:11];
+	
+	RegisterFile(Rs, Rt, 0, 0, 0);
+	
 }
 
 void execute(){
@@ -83,7 +167,7 @@ void execute(){
 }
 
 void memAccess(){
-    
+    memory_output = DataMemory(EXMEM.ALU_out, EXMEM.ALU_mux_out, write_flag, read_flag);
 }
 
 void writeBack(){
