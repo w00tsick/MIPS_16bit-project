@@ -6,6 +6,7 @@
  */
 #include <cstdlib>
 #include <string.h>
+#include <iostream>
 #include "ControlUnit.h"
 
 #define ADDI	(0)
@@ -24,6 +25,8 @@
 #define BEQ	(1101)
 #define BNE	(1110)
 
+using namespace std;
+
 //control Sig initial
 ControlUnit::ControlUnit(long opcode){
     this-> ALUOp = 0;
@@ -37,7 +40,20 @@ ControlUnit::ControlUnit(long opcode){
     this-> regWrite = 0;
 }
 
-ControlUnit::~ControlUnit() {
+void ControlUnit::print(){
+        cout << "Control Unit Signals: " << endl;
+        cout << "ALUOp :" << this->ALUOp << endl;
+        cout << "ALUSrc: " << this->ALUSrc << endl;
+        cout<<"branch :" << this->branch<< endl;
+        cout<<"jump : " << this->jump<< endl;
+	cout<<"memRead : " << this->memRead<< endl;
+	cout<<"memToReg : " << this->MemToReg << endl;
+	cout<<"memWrite : " << this->memWrite << endl;
+	cout<<"regDest : " << this->regDest << endl;
+	cout<<"regWrite : " << this->regWrite << endl;
+}
+
+ControlUnit::~ControlUnit(void) {
     
 }
 

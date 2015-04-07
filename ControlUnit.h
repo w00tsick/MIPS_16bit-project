@@ -22,6 +22,7 @@ public:
     
     ControlUnit(long);
     ~ControlUnit(void);
+    void print();
 
 };
 
