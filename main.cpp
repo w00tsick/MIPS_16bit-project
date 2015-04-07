@@ -24,6 +24,10 @@ int PC = 0x0000;
 int instruct_count = 0;
 int Tot_Reg = 8;
 int MemoryData[256];
+int MAX_INSTRUCTIONS = 1000;
+int MAX_MEMORY = 1024;
+int instructions[MAX_INSTRUCTIONS];   //array of strings might be easier
+int memory[MAX_MEMORY];
 
 //Global Obj
 RegProp IF_ID;
@@ -85,7 +89,14 @@ void fetch(){
 }
 
 void decode(){
-    
+    opcode = IF_ID.instruction[0:3];
+        ControlUnit(opcode);
+        
+        Rs = IF_ID.instruction[3:5];
+        Rt = IF_ID.instruction[6:8];
+        Rd = IF_ID.instruction[9:11];
+        
+        RegisterFile(Rs, Rt, 0, 0 ,0);
 }
 
 void execute(){
@@ -101,7 +112,7 @@ void execute(){
 }
 
 void memAccess(){
-    
+    memory_output = DataMemory(MEM.ALU_out, MEM.ALU_mux_out, write_flag, read_flag);
 }
 
 void writeBack(){
