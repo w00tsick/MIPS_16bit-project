@@ -23,6 +23,13 @@ public:
     ControlUnit(long);
     ~ControlUnit(void);
     void print();
+    
+    //parse for R format
+    void R_exec(int);
+    //parse for I format
+    void I_exec(int);
+    //parse for J format
+    void J_exec(int);
 
 };
 
