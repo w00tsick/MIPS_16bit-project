@@ -20,9 +20,9 @@ using namespace std;
  */
 
 //define OpCodes
-string R_CODE[] = ["0001", "0010", "0011", "0100", "0101", "0110"];
-string I_CODE[] = ["0000", "0111", "1000", "1001", "1010", "1011", "1101", "1110"];
-string J_CODE = "1100";
+string R_CODE[] = {"0001", "0010", "0011", "0100", "0101", "0110"};
+string I_CODE[] = {"0000", "0111", "1000", "1001", "1010", "1011", "1101", "1110"};
+string J_CODE[] = {"1100"};
 
 //Global variables
 int Registers[8];
@@ -37,6 +37,15 @@ RegProp IF_ID;
 RegProp ID_EX;
 RegProp MEM;
 RegProp WB;
+
+void fetch();
+void decode();
+void execute();
+void memAccess();
+void writeBack();
+void J_instruct(int, int);
+void I_instruct(int, int, int ,int);
+void R_instruct(int, int, int);
 
 int main() {
     int clock = 0, i =0;
@@ -108,7 +117,7 @@ void decode(){
     string opCode = ID_EX.instruction.substr(0,4);
     
     for (int i = 0; i < instruct_count; i++){
-        if(opCode.compare(R_CODE[i] == 0)){
+        if(opCode.compare(R_CODE[i]) == 0){
             R = true;
             break;
         }
@@ -116,7 +125,7 @@ void decode(){
     
     if(!R){
         for (int i = 0; i < instruct_count; i++){
-                if(opCode.compare(I_CODE[i] == 0)){
+                if(opCode.compare(I_CODE[i]) == 0){
                         I = true;
                         break;
                 }
@@ -125,7 +134,7 @@ void decode(){
     
     if(!R && !I){
         for (int i = 0; i < instruct_count; i++){
-                if(opCode.compare(J_CODE[i] == 0)){
+                if(opCode.compare(J_CODE[i]) == 0){
                         J = true;
                         break;
                 }
@@ -167,7 +176,7 @@ void decode(){
     else{
         //J type
         cout << "J type instruction: " << endl;
-        ID_EX.address=strtol(ID_EX.instruction.substr(4,12).c_str(),&p,2);
+        ID_EX.address=strtol(ID_EX.instruction.substr(4,12).c_str(),&pointer,2);
         ID_EX.sig->J_exec(ID_EX.opCode);
     }
     ID_EX.regOut1 = Registers[ID_EX.regRs];

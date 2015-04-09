@@ -14,9 +14,9 @@ using namespace std;
 RegProp::RegProp() {
 }
 
-RegProp::clear(void){
+void RegProp::clear(void){
     	this->ALUResult = 0;
-	this->currentPC = 0
+	this->currentPC = 0;
 	this->destRegister = 0;
 	this->instruction = "";
 	this->zeroBit = 0;

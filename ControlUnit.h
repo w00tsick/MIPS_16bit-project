@@ -21,6 +21,7 @@ public:
     int regWrite;
     
     ControlUnit(long);
+    ControlUnit();
     ~ControlUnit(void);
     void print();
     

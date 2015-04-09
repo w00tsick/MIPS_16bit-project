@@ -40,6 +40,18 @@ ControlUnit::ControlUnit(long opcode){
     this-> regWrite = 0;
 }
 
+ControlUnit::ControlUnit(){
+    this-> ALUOp = 0;
+    this-> ALUSrc = 0;
+    this-> branch = 0;
+    this-> jump = 0;
+    this-> memRead = 0;
+    this-> MemToReg = 0;
+    this-> memWrite = 0;
+    this-> regDest = 0;
+    this-> regWrite = 0;
+}
+
 void ControlUnit::R_exec(int OpCode){
 	switch (OpCode)
 	{
