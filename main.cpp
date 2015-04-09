@@ -19,6 +19,11 @@ using namespace std;
  * 
  */
 
+//define OpCodes
+string R_CODE[] = ["0001", "0010", "0011", "0100", "0101", "0110"];
+string I_CODE[] = ["0000", "0111", "1000", "1001", "1010", "1011", "1101", "1110"];
+string J_CODE = "1100";
+
 //Global variables
 int Registers[8];
 int PC = 0x0000;
@@ -94,6 +99,79 @@ void fetch(){
 
 void decode(){
     ID_EX = IF_ID;
+    
+    bool I = false;
+    bool R = false;
+    bool J = false;
+    char *pointer;
+    
+    string opCode = ID_EX.instruction.substr(0,4);
+    
+    for (int i = 0; i < instruct_count; i++){
+        if(opCode.compare(R_CODE[i] == 0)){
+            R = true;
+            break;
+        }
+    }
+    
+    if(!R){
+        for (int i = 0; i < instruct_count; i++){
+                if(opCode.compare(I_CODE[i] == 0)){
+                        I = true;
+                        break;
+                }
+        }
+    }
+    
+    if(!R && !I){
+        for (int i = 0; i < instruct_count; i++){
+                if(opCode.compare(J_CODE[i] == 0)){
+                        J = true;
+                        break;
+                }
+        }
+    }
+    
+    ID_EX.opCode = strtol(ID_EX.instruction.substr(0, 4).c_str(), &pointer, 2);
+    
+    if(R){
+        //R type
+        cout << "R type instruction: " << endl;
+        //get rs
+        ID_EX.regRs = strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
+        //get rt
+        ID_EX.regRt = strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
+        //get rd
+        ID_EX.regRd = strtol(ID_EX.instruction.substr(10,3).c_str(),&pointer,2);
+        //set destination register
+	ID_EX.destRegister = ID_EX.regRd;
+        //set signal to R signal
+        ID_EX.sig-> R_exec(ID_EX.opCode);
+    }
+    
+    else if(I){
+        //I type
+        cout << "I type instruction: " << endl;
+        //get rs
+        ID_EX.regRs=strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
+        //get rt	
+        ID_EX.regRt=strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
+        //get address for constant
+        ID_EX.address=strtol(ID_EX.instruction.substr(10,6).c_str(),&pointer,2);
+        //set destination register
+	ID_EX.destRegister = ID_EX.regRt;
+        //set signal to I
+	ID_EX.sig->I_exec(ID_EX.opCode);
+    }
+    
+    else{
+        //J type
+        cout << "J type instruction: " << endl;
+        ID_EX.address=strtol(ID_EX.instruction.substr(4,12).c_str(),&p,2);
+        ID_EX.sig->J_exec(ID_EX.opCode);
+    }
+    ID_EX.regOut1 = Registers[ID_EX.regRs];
+    ID_EX.regOut2 = Registers[ID_EX.regRt];
 }
 
 void execute(){
