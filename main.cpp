@@ -46,6 +46,7 @@ void writeBack();
 void J_instruct(int, int);
 void I_instruct(int, int, int ,int);
 void R_instruct(int, int, int);
+void print();
 
 int main() {
     int clock = 0, i =0;
@@ -93,8 +94,16 @@ int main() {
             writeBack();
             clock = 1;
         }
+        print();
     }
     return 0;
+}
+
+void print(){
+    cout << "Fetched Instruction: " << IF_ID.instruction << endl;
+    for(int i = 0; i < instruct_count; i++){
+            cout << "Register[" << i << "] contents: " << Registers[i];
+    }
 }
 
 void fetch(){
@@ -200,6 +209,7 @@ void execute(){
 }
 
 void memAccess(){
+    
     
 }
 
