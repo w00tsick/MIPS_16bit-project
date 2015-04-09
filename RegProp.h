@@ -33,6 +33,8 @@ public:
 	int address;
 	int writeData;
 	int writeReg;
+	int writeFlag;
+	int readFlag;
 	ControlUnit* sig;
         RegProp();
         ~RegProp();
