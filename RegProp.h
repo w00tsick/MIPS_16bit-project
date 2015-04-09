@@ -31,6 +31,8 @@ public:
 	int destRegister;
 	int memReadData;
 	int address;
+	int writeData;
+	int writeReg;
 	ControlUnit* sig;
         RegProp();
         ~RegProp();
