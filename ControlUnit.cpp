@@ -44,18 +44,6 @@ void ControlUnit::R_exec(int OpCode){
 	switch (OpCode)
 	{
 		case ADD:
-			this->ALUOp = 0;
-			this->ALUSrc = 0;
-			this->branch = 0;
-			this->jump = 0;
-			this->memRead = 0;
-			this->MemToReg = 0;
-			this->memWrite = 0;
-			this->regDest = 1;
-			this->regWrite = 1;
-			break;
-
-		case SUB:
 			this->ALUOp = 1;
 			this->ALUSrc = 0;
 			this->branch = 0;
@@ -67,7 +55,7 @@ void ControlUnit::R_exec(int OpCode){
 			this->regWrite = 1;
 			break;
 
-		case AND:
+		case SUB:
 			this->ALUOp = 2;
 			this->ALUSrc = 0;
 			this->branch = 0;
@@ -79,7 +67,7 @@ void ControlUnit::R_exec(int OpCode){
 			this->regWrite = 1;
 			break;
 
-		case OR:
+		case AND:
 			this->ALUOp = 3;
 			this->ALUSrc = 0;
 			this->branch = 0;
@@ -91,7 +79,7 @@ void ControlUnit::R_exec(int OpCode){
 			this->regWrite = 1;
 			break;
 
-		case NOT:
+		case OR:
 			this->ALUOp = 4;
 			this->ALUSrc = 0;
 			this->branch = 0;
@@ -103,8 +91,20 @@ void ControlUnit::R_exec(int OpCode){
 			this->regWrite = 1;
 			break;
 
-		case XOR:
+		case NOT:
 			this->ALUOp = 5;
+			this->ALUSrc = 0;
+			this->branch = 0;
+			this->jump = 0;
+			this->memRead = 0;
+			this->MemToReg = 0;
+			this->memWrite = 0;
+			this->regDest = 1;
+			this->regWrite = 1;
+			break;
+
+		case XOR:
+			this->ALUOp = 6;
 			this->ALUSrc = 0;
 			this->branch = 0;
 			this->jump = 0;
