@@ -169,7 +169,11 @@ void decode(){
         //get address for constant
         ID_EX.address=strtol(ID_EX.instruction.substr(10,6).c_str(),&pointer,2);
         //set destination register
+<<<<<<< HEAD
 	ID_EX.destRegister = ID_EX.regRt;//SHOULD THIS BE RS OR RT????????????????????????????????
+=======
+	ID_EX.destRegister = ID_EX.regRt;
+>>>>>>> parent of 13a6da6... Merge pull request #10 from ctscott92/patch-9
         //set signal to I
 	ID_EX.sig->I_exec(ID_EX.opCode);
     }
@@ -180,6 +184,7 @@ void decode(){
         ID_EX.address=strtol(ID_EX.instruction.substr(4,12).c_str(),&pointer,2);
         ID_EX.sig->J_exec(ID_EX.opCode);
     }
+<<<<<<< HEAD
     else{
     	//Error
     	cout << "THIS ADDRESS != R|I|J" << endl;
@@ -190,6 +195,13 @@ void decode(){
 }
 
 void execute(){//WTF IS THIS??????? why not just use a switch statement with some variable holding the opcode?
+=======
+    ID_EX.regOut1 = Registers[ID_EX.regRs];
+    ID_EX.regOut2 = Registers[ID_EX.regRt];
+}
+
+void execute(){
+>>>>>>> parent of 13a6da6... Merge pull request #10 from ctscott92/patch-9
     MEM = ID_EX;
     //J format
     if(MEM.sig -> jump = 1)
@@ -201,8 +213,11 @@ void execute(){//WTF IS THIS??????? why not just use a switch statement with som
         }else if(MEM.sig-> ALUSrc = 1){
             //I format
             I_instruct(MEM.opCode, ID_EX.regOut1, ID_EX.regOut2, MEM.address);
+<<<<<<< HEAD
         }else{
             cout << "Execute Error!" << endl;
+=======
+>>>>>>> parent of 13a6da6... Merge pull request #10 from ctscott92/patch-9
         }
     }
 }
@@ -276,7 +291,11 @@ void R_instruct(int OpCode, int rs, int rt){
             rd = (rs & 0xFFFF) ^ (rt & 0xFFFF);
             break;
     }
+<<<<<<< HEAD
     cout << "R_rd: " << rd << endl;
+=======
+    
+>>>>>>> parent of 13a6da6... Merge pull request #10 from ctscott92/patch-9
     MEM.ALUResult = rd;
     
     if(rd == 0){
@@ -285,7 +304,11 @@ void R_instruct(int OpCode, int rs, int rt){
 }
 
 void J_instruct(int OpCode, int address){
+<<<<<<< HEAD
     if(address <= 4096)//4 bit opCode + 12 bit address, 2^12 = 4096
+=======
+    if(address <= 256)
+>>>>>>> parent of 13a6da6... Merge pull request #10 from ctscott92/patch-9
         MEM.jumpValue = address;
     else
         cout << "ERR_J: invalid jump address" << endl;
@@ -302,7 +325,10 @@ void I_instruct(int OpCode, int rs, int rt, int address){
     if(MEM.sig->ALUOp == 7){ // SRL
         r = (rt>>address);
     }
+<<<<<<< HEAD
     //why is this op == 1??????????????????????????????????????????????????????????????????????
+=======
+>>>>>>> parent of 13a6da6... Merge pull request #10 from ctscott92/patch-9
     if(MEM.sig->ALUOp == 1){ // BNE, BEQ
         MEM.branchValue = address;
         r = rs - rt;
@@ -319,7 +345,10 @@ void I_instruct(int OpCode, int rs, int rt, int address){
             //if the result is not 0, BEQ no branch
             MEM.sig->branch = 0;
     }
+<<<<<<< HEAD
     cout << "I_r: "<< r << endl;
+=======
+>>>>>>> parent of 13a6da6... Merge pull request #10 from ctscott92/patch-9
     MEM.ALUResult = r;
 }
 
