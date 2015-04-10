@@ -30,6 +30,8 @@ void RegProp::clear(void){
 	this->regOut1 = 0;
 	this->regOut2 = 0;
 	this->address = 0;
+	this->writeReg = 0;
+	this->writeData=0;
 	sig = new ControlUnit;
 }
 
@@ -52,5 +54,7 @@ void RegProp::print(void){
 	cout<<this->address<<endl;
 	cout<<this->regOut1<<endl;
 	cout<<this->regOut2<<endl;
+	cout<<this->writeReg<<endl;
+	cout<<this->writeData<<endl;
 }
 
