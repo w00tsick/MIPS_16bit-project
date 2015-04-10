@@ -214,7 +214,24 @@ void memAccess(){
 }
 
 void writeBack(){
+    int mux0, mux1, wData, wAddress;
+    mux0 = WB.memReadData;
+    mux1 = WB.address;
+    wData = WB.writeData;
     
+    //writeBack mux
+    if (WB.memToReg == 0){
+    	wAddress = mux0;
+    }
+    else {
+    	wAddress = mux1;
+    }
+    
+    //Register Write
+    if (WB.regWrite == 1){
+    	Registers[wAddress] = wData;
+    }
+    return;
 }
 
 void R_instruct(int OpCode, int rs, int rt){
