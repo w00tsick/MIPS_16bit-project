@@ -11,24 +11,24 @@
 
 #define ADDI	(0)
 #define ADD     (1)
-#define SUB	(10)
-#define AND	(11)
-#define OR	(100)
-#define NOT	(101)
-#define XOR	(110)
-#define LW	(111)
-#define SW	(1000)
-#define LUI	(1001)
-#define SLL	(1010)
-#define SRL	(1011)
-#define JMP	(1100)
-#define BEQ	(1101)
-#define BNE	(1110)
+#define SUB	(2)
+#define AND	(3)
+#define OR	(4)
+#define NOT	(5)
+#define XOR	(6)
+#define LW	(7)
+#define SW	(8)
+#define LUI	(9)
+#define SLL	(10)
+#define SRL	(11)
+#define JMP	(12)
+#define BEQ	(13)
+#define BNE	(14)
 
 using namespace std;
 
 //control Sig initial
-ControlUnit::ControlUnit(long opcode){
+ControlUnit::ControlUnit(int opcode){
     this-> ALUOp = 0;
     this-> ALUSrc = 0;
     this-> branch = 0;
@@ -38,6 +38,9 @@ ControlUnit::ControlUnit(long opcode){
     this-> memWrite = 0;
     this-> regDest = 0;
     this-> regWrite = 0;
+    this->I_exec(opcode);
+    this->J_exec(opcode);
+    this->R_exec(opcode);
 }
 
 ControlUnit::ControlUnit(){
@@ -50,6 +53,11 @@ ControlUnit::ControlUnit(){
     this-> memWrite = 0;
     this-> regDest = 0;
     this-> regWrite = 0;
+}
+
+ControlUnit::ControlUnit(string opcode){
+    char *pointer;
+    ControlUnit(strtol(opcode.c_str(), &pointer,2));
 }
 
 void ControlUnit::R_exec(int OpCode){

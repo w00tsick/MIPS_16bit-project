@@ -36,6 +36,7 @@ public:
 	int writeFlag;
 	int readFlag;
 	ControlUnit* sig;
+        
         RegProp();
         ~RegProp();
         void clear();

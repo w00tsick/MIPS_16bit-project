@@ -30,7 +30,7 @@ int PC = 0x0000;
 int instruct_count = 0;
 int Tot_Reg = 8;
 int MemoryData[256];
-string *uniqueInstruct;
+string *uniqueInstruct = NULL; 
 //fetch buffer update vars
 string fetchInstr;
 int fetchPC = 0;
@@ -85,16 +85,17 @@ void I_instruct(int, int, int ,int);
 void R_instruct(int, int, int);
 
 int main() {
-    int clock = 0, i =0;
+    cout << "entering main \n";
+    int clock = 0;
     
     Registers[0] = 0x0000; //$zero
-    Registers[1] = 0x0000; //$t0
-    Registers[2] = 0x0000; //$t1
-    Registers[3] = 0x0000; //$t2
-    Registers[4] = 0x0000; //$a0
-    Registers[5] = 0x0000; //$a1
-    Registers[6] = 0x0000; //$v0
-    Registers[7] = 0x0000; //$v1
+    Registers[1] = 0x0001; //$t0
+    Registers[2] = 0x0008; //$t1
+    Registers[3] = 0x0005; //$t2
+    Registers[4] = 0x1010; //$a0
+    Registers[5] = 0xFF00; //$a1
+    Registers[6] = 0x00FF; //$v0
+    Registers[7] = 0x00F0; //$v1
             
     ifstream input;
     input.open("source.txt");
@@ -110,7 +111,10 @@ int main() {
         cout << "File not found" << endl;
         exit(0);
     }
+    cout << "Number of instructions: " << instruct_count << endl;
+    uniqueInstruct = new string[instruct_count+1];
     
+    int i = 0;
     input.open("source.txt");
     while(input.good()){
         getline(input, uniqueInstruct[i]);
@@ -118,9 +122,10 @@ int main() {
     }
     input.close();
     
-    cout << "entering while loop \n";
+    cout << "entering while loop" << endl;;
+    
     while(PC < instruct_count){
-        if (clock == 1) {
+        if (clock == 0) {
             fetch();
             decode();
             execute();
@@ -137,16 +142,18 @@ int main() {
 }
 
 void fetch(){
+    cout << "Entering fetch()" << endl;
     //clear the properties
-    //ID_EX.clear();
+    ID_EX.clear();
     //get the instruction from instruction array
-    fetchInstr = uniqueInstruct[PC];
+    IF_ID.instruction = uniqueInstruct[PC];
     //increase iteration of PC
-    fetchPC = PC + 1;
+    IF_ID.currentPC = PC + 1;
+    cout << "Instruction: " << IF_ID.instruction << endl;
 }
 
 void decode(){
-    //ID_EX = IF_ID;
+    ID_EX = IF_ID;
     
     bool I = false;
     bool R = false;
@@ -156,16 +163,18 @@ void decode(){
     string opCode = ID_EX.instruction.substr(0,4);
     cout << "OpCode: " << opCode << endl;
     
-    for (int i = 0; i < instruct_count; i++){
+    for (int i = 0; i < sizeof(R_CODE)/sizeof(R_CODE[0]); i++){
         if(opCode.compare(R_CODE[i]) == 0){
+            cout << "R type opCode \n";
             R = true;
             break;
         }
     }
     
     if(!R){
-        for (int i = 0; i < instruct_count; i++){
+        for (int i = 0; i < sizeof(I_CODE)/sizeof(I_CODE[0]); i++){
                 if(opCode.compare(I_CODE[i]) == 0){
+                    cout << "I type opCode \n";
                         I = true;
                         break;
                 }
@@ -173,59 +182,60 @@ void decode(){
     }
     
     if(!R && !I){
-        for (int i = 0; i < instruct_count; i++){
+        for (int i = 0; i < sizeof(J_CODE)/sizeof(J_CODE[0]); i++){
                 if(opCode.compare(J_CODE[i]) == 0){
+                    cout << "J type opCode \n";
                         J = true;
                         break;
                 }
         }
     }
     
-    decodeOpcode = strtol(IF_ID.instruction.substr(0, 4).c_str(), &pointer, 2);
+    ID_EX.opCode=strtol(ID_EX.instruction.substr(0,4).c_str(),&pointer,2);
     
     if(R){
         //R type
         cout << "R type instruction: " << endl;
         //get rs
-        decodeRs = strtol(IF_ID.instruction.substr(4,3).c_str(),&pointer,2);
+        decodeRs = strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
         //get rt
-        decodeRt = strtol(IF_ID.instruction.substr(7,3).c_str(),&pointer,2);
+        decodeRt = strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
         //get rd
-        decodeRd = strtol(IF_ID.instruction.substr(10,3).c_str(),&pointer,2);
+        decodeRd = strtol(ID_EX.instruction.substr(10,3).c_str(),&pointer,2);
         //set destination register
-	decodeDest = ID_EX.regRd;
+	ID_EX.destRegister = ID_EX.regRd;
         //set signal to R signal
-        IF_ID.sig-> R_exec(IF_ID.opCode);
+        ID_EX.sig-> R_exec(ID_EX.opCode);
     }
     
     else if(I){
         //I type
         cout << "I type instruction: " << endl;
         //get rs
-        decodeRs=strtol(IF_ID.instruction.substr(4,3).c_str(),&pointer,2);
+        ID_EX.regRs=strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
+        cout << strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2) << endl;
         //get rt	
-        decodeRt=strtol(IF_ID.instruction.substr(7,3).c_str(),&pointer,2);
+        ID_EX.regRt=strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
         //get address for constant
-        decodeAddress=strtol(IF_ID.instruction.substr(10,6).c_str(),&pointer,2);
+        ID_EX.address=strtol(ID_EX.instruction.substr(10,6).c_str(),&pointer,2);
         //set destination register
-	decodeDest = IF_ID.regRt;//SHOULD THIS BE RS OR RT????????????????????????????????
+	ID_EX.destRegister = ID_EX.regRt;
         //set signal to I
-	IF_ID.sig->I_exec(IF_ID.opCode);
-
+	ID_EX.sig-> I_exec(ID_EX.opCode);
     }
     
     else if (J){
         //J type
         cout << "J type instruction: " << endl;
-        decodeAddress =strtol(IF_ID.instruction.substr(4,12).c_str(),&pointer,2);
-        IF_ID.sig->J_exec(IF_ID.opCode);
+        decodeAddress =strtol(ID_EX.instruction.substr(4,12).c_str(),&pointer,2);
+        ID_EX.sig->J_exec(ID_EX.opCode);
     }
     else{
     	//Error
     	cout << "THIS ADDRESS != R|I|J" << endl;
     }
     //save signals for updating buffer
-    decodeSigALUOp = IF_ID.sig->ALUOp;
+    /*decodeSigALUOp = IF_ID.sig->ALUOp;
     decodeSigALUSrc = IF_ID.sig->ALUSrc;
     decodeSigBranch = IF_ID.sig->branch;
     decodeSigJump = IF_ID.sig->jump;
@@ -233,25 +243,25 @@ void decode(){
     decodeSigMemToReg = IF_ID.sig->MemToReg;
     decodeSigMemWrite = IF_ID.sig->memWrite;
     decodeSigRegDest = IF_ID.sig->regDest;
-    decodeSigRegWrite = IF_ID.sig->regWrite;
+    decodeSigRegWrite = IF_ID.sig->regWrite;*/
     
-    decodeRegOut1 = Registers[IF_ID.regRs];
-    decodeRegOut2 = Registers[IF_ID.regRt];
-    cout << "Register File Output: " << decodeRegOut1 << ", " << decodeRegOut2 << endl;
+    ID_EX.regOut1 = Registers[ID_EX.regRs];
+    ID_EX.regOut2 = Registers[ID_EX.regRt];
+    cout << "Register File Output: " << ID_EX.regOut1 << ", " << ID_EX.regOut2 << endl;
 }
 
-void execute(){//WTF IS THIS??????? why not just use a switch statement with some variable holding the opcode?
-    //MEM = ID_EX;
+void execute(){
+    MEM = ID_EX;
     //J format
-    if(ID_EX.sig -> jump = 1)
-        J_instruct(ID_EX.opCode, ID_EX.address);
+    if(MEM.sig -> jump = 1)
+        J_instruct(MEM.opCode, MEM.address);
     else{
         //R format
-        if(ID_EX.sig->ALUSrc = 0){
-            R_instruct(ID_EX.opCode, ID_EX.regOut1, ID_EX.regOut2);
-        }else if(ID_EX.sig-> ALUSrc = 1){
+        if(MEM.sig->ALUSrc = 0){
+            R_instruct(MEM.opCode, ID_EX.regOut1, ID_EX.regOut2);
+        }else if(MEM.sig-> ALUSrc = 1){
             //I format
-            I_instruct(ID_EX.opCode, ID_EX.regOut1, ID_EX.regOut2, ID_EX.address);
+            I_instruct(MEM.opCode, ID_EX.regOut1, ID_EX.regOut2, MEM.address);
         }else{
             cout << "Execute Error!" << endl;
         }
@@ -259,6 +269,9 @@ void execute(){//WTF IS THIS??????? why not just use a switch statement with som
 }
 
 void memAccess(){
+    
+    WB = MEM;
+    
     memAdd = MEM.address;
     memWriteData = MEM.writeData;
     cout << "memAdd: "<< memAdd << endl;
@@ -267,12 +280,12 @@ void memAccess(){
     flagW = MEM.writeFlag;
     flagR = MEM.readFlag;
     
-    if (flagR == 1){
-    	memRData = MemoryData[memAdd];
+    if (MEM.sig->memRead == 1){
+    	WB.memReadData = MemoryData[MEM.ALUResult];
     }
     
-    if (flagW == 1){
-    	MemoryData[memAdd] = memWriteData;
+    if (MEM.sig->memWrite == 1){
+    	MemoryData[MEM.ALUResult] = MEM.regOut1;
     }
     
     return;
@@ -303,7 +316,7 @@ void writeBack(){
 void R_instruct(int OpCode, int rs, int rt){
     int rd;
     //R instruction
-    switch(ID_EX.sig->ALUOp)
+    switch(MEM.sig->ALUOp)
     {
         case 1: //ADD
             rd = rs + rt;
@@ -325,47 +338,47 @@ void R_instruct(int OpCode, int rs, int rt){
             break;
     }
     cout << "R_rd: " << rd << endl;
-    executeALUResult = rd;
+    MEM.ALUResult = rd;
     
     if(rd == 0){
-        executeZeroBit = 1;
+        MEM.zeroBit = 1;
     }
 }
 
 void J_instruct(int OpCode, int address){
     if(address <= 4096)//4 bit opCode + 12 bit address, 2^12 = 4096
-        executeJumpValue = address;
+        MEM.jumpValue = address;
     else
         cout << "ERR_J: invalid jump address" << endl;
 }
 
 void I_instruct(int OpCode, int rs, int rt, int address){
     int r;
-    if(ID_EX.sig->ALUOp == 0){ // add Immediate, and LW, SW
+    if(MEM.sig->ALUOp == 0){ // add Immediate, and LW, SW
         r = address + rt;
     }
-    if(ID_EX.sig->ALUOp == 6){ // SLL
+    if(MEM.sig->ALUOp == 6){ // SLL
         r = (rt<<address);
     }
-    if(ID_EX.sig->ALUOp == 7){ // SRL
+    if(MEM.sig->ALUOp == 7){ // SRL
         r = (rt>>address);
     }
-    //why is this op == 1??????????????????????????????????????????????????????????????????????
-    if(ID_EX.sig->ALUOp == 1){ // BNE, BEQ
+    
+    if(MEM.sig->ALUOp == 1){ // BNE, BEQ
         executeBranchValue = address;
         r = rs - rt;
     }
     if(r == 0){
-        ID_EX.zeroBit = 1;
+        MEM.zeroBit = 1;
         if(OpCode == 14){
             //if the result is 0, they are equal, BNE no branch
-            executeSigBranch= 0;
+            MEM.branchValue= 0;
         }
     }
     else{
         if(OpCode == 13)
             //if the result is not 0, BEQ no branch
-            executeSigBranch = 0;
+            MEM.branchValue= 0;
     }
     cout << "I_r: "<< r << endl;
     executeALUResult = r;

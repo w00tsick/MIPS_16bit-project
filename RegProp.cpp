@@ -12,6 +12,7 @@ using namespace std;
 
 
 RegProp::RegProp() {
+    this->clear();
 }
 
 void RegProp::clear(void){

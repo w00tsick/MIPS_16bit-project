@@ -8,6 +8,8 @@
 #ifndef CONTROLUNIT_H
 #define	CONTROLUNIT_H
 
+using namespace std;
+
 class ControlUnit {
 public:
     int ALUOp;
@@ -20,8 +22,9 @@ public:
     int memWrite;
     int regWrite;
     
-    ControlUnit(long);
+    ControlUnit(int);
     ControlUnit();
+    ControlUnit(string);
     ~ControlUnit(void);
     void print();
     
