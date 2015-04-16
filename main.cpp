@@ -310,18 +310,33 @@ void writeBack(){
     wData = WB.writeData;
     
     //writeBack mux
-    if (WB.sig->MemToReg == 0){
-    	wAddress = mux0;
-    }
-    else {
-    	wAddress = mux1;
-    }
-    
-    //Register Write
-    if (WB.sig->regWrite == 1){
-    	Registers[wAddress] = wData;
-    }
-    cout << "wAddress: "<< wAddress << endl;
+    if(WB.sig->jump != 1){
+        if (WB.sig->MemToReg == 0){
+                if(WB.sig->ALUSrc == 0){
+                    //R format
+                    cout << "entering R format WB: " << endl;
+                    Registers[WB.regRd] = WB.ALUResult;
+                }
+                else{
+                    cout << "entering I format WB: " << endl;
+                    //I format
+                    if(WB.sig->branch == 1){
+                        cout << "Branching I format: " << endl;
+                        PC = PC + mux1;
+                    }else{
+                        cout << "Writing to memory: " << endl;
+                        if(WB.sig->memWrite != 1){
+                            Registers[WB.regRt] = WB.ALUResult;
+                            cout << "Register contents: " << Registers[WB.regRt] << endl;
+                        }
+                    }
+                }
+        }
+        }else{
+                //J format
+                cout << "entering J format WB: " << endl;
+                PC = WB.jumpValue;
+        }
     return;
 }
 
@@ -377,27 +392,27 @@ void I_instruct(int OpCode, int rs, int rt, int address){
     }
     
     if(MEM.sig->ALUOp == 1){ // BNE, BEQ
-        executeBranchValue = address;
+        MEM.branchValue = address;
         r = rs - rt;
     }
     if(r == 0){
         MEM.zeroBit = 1;
         if(OpCode == 14){
             //if the result is 0, they are equal, BNE no branch
-            MEM.branchValue= 0;
+            MEM.sig-> branch = 0;
         }
     }
     else{
         if(OpCode == 13)
             //if the result is not 0, BEQ no branch
-            MEM.branchValue= 0;
+            MEM.sig-> branch= 0;
     }
     cout << "I_r: "<< r << endl;
-    executeALUResult = r;
+    MEM.ALUResult = r;
 }
 
 void updateBuffer(){
-    //fetch buffer update vars
+    /*//fetch buffer update vars
     IF_ID.instruction = fetchInstr;
     IF_ID.currentPC = fetchPC;
     //decode buffer update vars
@@ -429,5 +444,5 @@ void updateBuffer(){
     WB.writeData = memWriteData;
     WB.writeFlag = flagW;
     WB.readFlag = flagR;
-    WB.memReadData = memRData;
+    WB.memReadData = memRData;*/
 }
