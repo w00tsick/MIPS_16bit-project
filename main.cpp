@@ -124,7 +124,7 @@ int main() {
     
     cout << "entering while loop" << endl;;
     
-    //while(PC < instruct_count){
+    while(PC < instruct_count){
         if (clock == 0) {
             fetch();
             decode();
@@ -133,12 +133,13 @@ int main() {
             updateBuffer();
             writeBack();
             clock = 0;
+            PC++;
         }
         else {
             
             clock = 1;
         }
-    //}
+    }
     return 0;
 }
 
@@ -198,11 +199,14 @@ void decode(){
         //R type
         cout << "R type instruction: " << endl;
         //get rs
-        decodeRs = strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
+        ID_EX.regRs = strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
+        cout << "regRs: " << ID_EX.regRs << endl;
         //get rt
-        decodeRt = strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
+        ID_EX.regRt = strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
+        cout << "regRt: " << ID_EX.regRt << endl;
         //get rd
-        decodeRd = strtol(ID_EX.instruction.substr(10,3).c_str(),&pointer,2);
+        ID_EX.regRd = strtol(ID_EX.instruction.substr(10,3).c_str(),&pointer,2);
+        cout << "regRd: " << ID_EX.regRd << endl;
         //set destination register
 	ID_EX.destRegister = ID_EX.regRd;
         //set signal to R signal

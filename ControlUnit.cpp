@@ -15,7 +15,7 @@
 #define AND	(3)
 #define OR	(4)
 #define NOT	(5)
-#define XOR	(6)
+#define XOR	(6) //broken
 #define LW	(7)
 #define SW	(8)
 #define LUI	(9)
