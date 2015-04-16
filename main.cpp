@@ -171,52 +171,63 @@ void decode(){
         }
     }
     
-    decodeOpcode = strtol(ID_EX.instruction.substr(0, 4).c_str(), &pointer, 2);
+    decodeOpcode = strtol(IF_ID.instruction.substr(0, 4).c_str(), &pointer, 2);
     
     if(R){
         //R type
         cout << "R type instruction: " << endl;
         //get rs
-        decodeRs = strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
+        decodeRs = strtol(IF_ID.instruction.substr(4,3).c_str(),&pointer,2);
         //get rt
-        decodeRt = strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
+        decodeRt = strtol(IF_ID.instruction.substr(7,3).c_str(),&pointer,2);
         //get rd
-        decodeRd = strtol(ID_EX.instruction.substr(10,3).c_str(),&pointer,2);
+        decodeRd = strtol(IF_ID.instruction.substr(10,3).c_str(),&pointer,2);
         //set destination register
 	decodeDest = ID_EX.regRd;
-        //***set signal to R signal*** needs update for pipelines
-        ID_EX.sig-> R_exec(ID_EX.opCode);
+        //set signal to R signal
+        IF_ID.sig-> R_exec(IF_ID.opCode);
     }
     
     else if(I){
         //I type
         cout << "I type instruction: " << endl;
         //get rs
-        decodeRs=strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
+        decodeRs=strtol(IF_ID.instruction.substr(4,3).c_str(),&pointer,2);
         //get rt	
-        decodeRt=strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
+        decodeRt=strtol(IF_ID.instruction.substr(7,3).c_str(),&pointer,2);
         //get address for constant
-        decodeAddress=strtol(ID_EX.instruction.substr(10,6).c_str(),&pointer,2);
+        decodeAddress=strtol(IF_ID.instruction.substr(10,6).c_str(),&pointer,2);
         //set destination register
-	decodeDest = ID_EX.regRt;//SHOULD THIS BE RS OR RT????????????????????????????????
-        //***set signal to I *** needs update for pipelining
-	ID_EX.sig->I_exec(ID_EX.opCode);
+	decodeDest = IF_ID.regRt;//SHOULD THIS BE RS OR RT????????????????????????????????
+        //set signal to I
+	IF_ID.sig->I_exec(IF_ID.opCode);
+
     }
     
     else if (J){
         //J type
         cout << "J type instruction: " << endl;
-        decodeAddress =strtol(ID_EX.instruction.substr(4,12).c_str(),&pointer,2);
-        //**** needs updating for pipelining
-        ID_EX.sig->J_exec(ID_EX.opCode);
+        decodeAddress =strtol(IF_ID.instruction.substr(4,12).c_str(),&pointer,2);
+        IF_ID.sig->J_exec(IF_ID.opCode);
     }
     else{
     	//Error
     	cout << "THIS ADDRESS != R|I|J" << endl;
     }
-    decodeRegOut1 = Registers[ID_EX.regRs];
-    decodeRegOut2 = Registers[ID_EX.regRt];
-    cout << "ID_EX Registers: " << decodeRegOut1 << ", " << decodeRegOut2 << endl;
+    //save signals for updating buffer
+    decodeSigALUOp = IF_ID.sig->ALUOp;
+    decodeSigALUSrc = IF_ID.sig->ALUSrc;
+    decodeSigBranch = IF_ID.sig->branch;
+    decodeSigJump = IF_ID.sig->jump;
+    decodeSigMemRead = IF_ID.sig->memRead;
+    decodeSigMemToReg = IF_ID.sig->MemToReg;
+    decodeSigMemWrite = IF_ID.sig->memWrite;
+    decodeSigRegDest = IF_ID.sig->regDest;
+    decodeSigRegWrite = IF_ID.sig->regWrite;
+    
+    decodeRegOut1 = Registers[IF_ID.regRs];
+    decodeRegOut2 = Registers[IF_ID.regRt];
+    cout << "Register File Output: " << decodeRegOut1 << ", " << decodeRegOut2 << endl;
 }
 
 void execute(){//WTF IS THIS??????? why not just use a switch statement with some variable holding the opcode?
@@ -331,20 +342,20 @@ void I_instruct(int OpCode, int rs, int rt, int address){
     }
     //why is this op == 1??????????????????????????????????????????????????????????????????????
     if(ID_EX.sig->ALUOp == 1){ // BNE, BEQ
-        ID_EX.branchValue = address;
+        executeBranchValue = address;
         r = rs - rt;
     }
     if(r == 0){
         ID_EX.zeroBit = 1;
         if(OpCode == 14){
             //if the result is 0, they are equal, BNE no branch
-            ID_EX.sig-> branch= 0;
+            executeSigBranch= 0;
         }
     }
     else{
         if(OpCode == 13)
             //if the result is not 0, BEQ no branch
-            ID_EX.sig->branch = 0;
+            executeSigBranch = 0;
     }
     cout << "I_r: "<< r << endl;
     executeALUResult = r;
@@ -363,6 +374,15 @@ void updateBuffer(){
     ID_EX.address = decodeAddress;
     ID_EX.regOut1 = decodeRegOut1;
     ID_EX.regOut2 = decodeRegOut2;
+    ID_EX.sig->ALUOp = decodeSigALUOp;
+    ID_EX.sig->ALUSrc = decodeSigALUSrc;
+    ID_EX.sig->branch = decodeSigBranch;
+    ID_EX.sig->jump = decodeSigJump;
+    ID_EX.sig->memRead = decodeSigMemRead;
+    ID_EX.sig->MemToReg = decodeSigMemToReg;
+    ID_EX.sig->memWrite = decodeSigMemWrite;
+    ID_EX.sig->regDest = decodeSigRegDest;
+    ID_EX.sig->regWrite = decodeSigRegWrite;
     //execute buffer update vars
     MEM.ALUResult = executeALUResult;
     MEM.zeroBit = executeZeroBit;
