@@ -124,20 +124,21 @@ int main() {
     
     cout << "entering while loop" << endl;;
     
-    while(PC < instruct_count){
+    //while(PC < instruct_count){
         if (clock == 0) {
             fetch();
             decode();
             execute();
             memAccess();
             updateBuffer();
+            writeBack();
             clock = 0;
         }
         else {
-            writeBack();
+            
             clock = 1;
         }
-    }
+    //}
     return 0;
 }
 
@@ -213,11 +214,13 @@ void decode(){
         cout << "I type instruction: " << endl;
         //get rs
         ID_EX.regRs=strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2);
-        cout << strtol(ID_EX.instruction.substr(4,3).c_str(),&pointer,2) << endl;
+        cout << "regRs: " << ID_EX.regRs << endl;
         //get rt	
         ID_EX.regRt=strtol(ID_EX.instruction.substr(7,3).c_str(),&pointer,2);
+        cout << "regRt: " << ID_EX.regRt << endl;
         //get address for constant
         ID_EX.address=strtol(ID_EX.instruction.substr(10,6).c_str(),&pointer,2);
+        cout << "address: " << ID_EX.address << endl;
         //set destination register
 	ID_EX.destRegister = ID_EX.regRt;
         //set signal to I
@@ -251,16 +254,22 @@ void decode(){
 }
 
 void execute(){
+    cout << "entering execute(): " << endl;
     MEM = ID_EX;
     //J format
-    if(MEM.sig -> jump = 1)
+
+    if(MEM.sig -> jump == 1){
+        cout << "execute J instruction: " << endl;
         J_instruct(MEM.opCode, MEM.address);
+    }
     else{
         //R format
-        if(MEM.sig->ALUSrc = 0){
+        if(MEM.sig->ALUSrc == 0){
+            cout << "execute R instruction: " << endl;
             R_instruct(MEM.opCode, ID_EX.regOut1, ID_EX.regOut2);
-        }else if(MEM.sig-> ALUSrc = 1){
+        }else if(MEM.sig-> ALUSrc == 1){
             //I format
+            cout << "Executing I format: " << endl;
             I_instruct(MEM.opCode, ID_EX.regOut1, ID_EX.regOut2, MEM.address);
         }else{
             cout << "Execute Error!" << endl;
@@ -282,16 +291,19 @@ void memAccess(){
     
     if (MEM.sig->memRead == 1){
     	WB.memReadData = MemoryData[MEM.ALUResult];
+        cout << "Writeback Read Data: " << WB.memReadData << endl;
     }
     
     if (MEM.sig->memWrite == 1){
     	MemoryData[MEM.ALUResult] = MEM.regOut1;
+        cout << "Memory Data contents: " << MemoryData[MEM.ALUResult] << endl;
     }
     
     return;
 }
 
 void writeBack(){
+    cout << "Entering WriteBack: " << endl;
     int mux0, mux1, wData, wAddress;
     mux0 = WB.memReadData;
     mux1 = WB.address;
