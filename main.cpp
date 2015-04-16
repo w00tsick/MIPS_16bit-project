@@ -31,33 +31,42 @@ int instruct_count = 0;
 int Tot_Reg = 8;
 int MemoryData[256];
 string *uniqueInstruct;
-+//fetch buffer update vars
-+int fetchInstr = 0;
-+int fetchPC = 0;
-+//decode buffer update vars
-+    //still need controlsig globals
-+int decodeOpcode = 0;
-+int decodeRs = 0;
-+int decodeRt = 0;
-+int decodeRd = 0;
-+int decodeDest = 0;
-+int decodeAddress = 0;
-+int decodeRegOut1 = 0;
-+int decodeRegOut2 = 0;
-+//execute buffer update vars
-+int executeALUResult = 0;
-+int executeZeroBit = 0;
-+int executeJumpValue = 0;
-+int executeBranchValue = 0;
-+int executeZeroBit = 0;
-+int executeSigBranch = 0;
-+int executeALUResult = 0;
-+//memAccess buffer update vars
-+int memAdd = 0;
-+int memWriteData = 0;
-+int flagW = 0;
-+int flagR = 0;
-+int memRData = 0;
+//fetch buffer update vars
+string fetchInstr;
+int fetchPC = 0;
+//decode buffer update vars
+    //still need controlsig globals
+int decodeOpcode = 0;
+int decodeRs = 0;
+int decodeRt = 0;
+int decodeRd = 0;
+int decodeDest = 0;
+int decodeAddress = 0;
+int decodeRegOut1 = 0;
+int decodeRegOut2 = 0;
+//execute buffer update vars
+int executeALUResult = 0;
+int executeZeroBit = 0;
+int executeJumpValue = 0;
+int executeBranchValue = 0;
+int executeSigBranch = 0;
+//memAccess buffer update vars
+int memAdd = 0;
+int memWriteData = 0;
+int flagW = 0;
+int flagR = 0;
+int memRData = 0;
+
+//Signal placeholders
+int decodeSigALUOp;
+int decodeSigALUSrc;
+int decodeSigBranch;
+int decodeSigJump;
+int decodeSigMemRead;
+int decodeSigMemToReg;
+int decodeSigMemWrite;
+int decodeSigRegDest;
+int decodeSigRegWrite;
 
 //Global Obj
 RegProp IF_ID;
@@ -109,13 +118,14 @@ int main() {
     }
     input.close();
     
+    cout << "entering while loop \n";
     while(PC < instruct_count){
         if (clock == 1) {
             fetch();
             decode();
             execute();
             memAccess();
-            bufferUpdate();
+            updateBuffer();
             clock = 0;
         }
         else {
@@ -258,7 +268,7 @@ void memAccess(){
     flagR = MEM.readFlag;
     
     if (flagR == 1){
-    	memRData = MemoryData[memAdd]
+    	memRData = MemoryData[memAdd];
     }
     
     if (flagW == 1){
@@ -275,7 +285,7 @@ void writeBack(){
     wData = WB.writeData;
     
     //writeBack mux
-    if (WB.memToReg == 0){
+    if (WB.sig->MemToReg == 0){
     	wAddress = mux0;
     }
     else {
@@ -283,7 +293,7 @@ void writeBack(){
     }
     
     //Register Write
-    if (WB.regWrite == 1){
+    if (WB.sig->regWrite == 1){
     	Registers[wAddress] = wData;
     }
     cout << "wAddress: "<< wAddress << endl;
@@ -386,7 +396,7 @@ void updateBuffer(){
     //execute buffer update vars
     MEM.ALUResult = executeALUResult;
     MEM.zeroBit = executeZeroBit;
-    MEM.jumpData = executeJumpValue;
+    MEM.jumpValue = executeJumpValue;
     MEM.branchValue = executeBranchValue;
     MEM.sig->branch = executeSigBranch;
     //memAccess buffer update vars
