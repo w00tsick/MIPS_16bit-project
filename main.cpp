@@ -365,7 +365,7 @@ void R_instruct(int OpCode, int rs, int rt){
             rd = ~(rd & 0xFFFF);
             break;
         case 6: //xor
-            rd = (rs & 0xFFFF) ^ (rt & 0xFFFF);
+            rd = !(rs && rt) && (rt || rs);
             break;
     }
     cout << "R_rd: " << rd << endl;
