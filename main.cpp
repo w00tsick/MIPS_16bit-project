@@ -251,7 +251,7 @@ void decode(){
 	else if (J){
 		//J type
 		cout << "J type instruction: " << endl;
-		decodeAddress = strtol(ID_EX.instruction.substr(4, 12).c_str(), &pointer, 2);
+		ID_EX.address = strtol(ID_EX.instruction.substr(4, 12).c_str(), &pointer, 2);
 		ID_EX.sig->J_exec(ID_EX.opCode);
 	}
 	else{
@@ -361,7 +361,7 @@ void writeBack(){
 					cout << "Branching I format: " << endl;
 					PC = PC + mux1;
 				}
-				else{
+				else if ((WB.opCode != 13) && (WB.opCode != 14)){ //prevent non taken branches from changing registers
 					cout << "Writing to memory: " << endl;
 					if (WB.sig->memWrite != 1){
 						Registers[WB.regRt] = WB.ALUResult;
@@ -378,7 +378,7 @@ void writeBack(){
 	else{
 		//J format
 		cout << "entering J format WB: " << endl;
-		PC = WB.jumpValue;
+		PC = WB.jumpValue - 1; //-1 for PC++ at end of clock cycle
 	}
 	return;
 }
