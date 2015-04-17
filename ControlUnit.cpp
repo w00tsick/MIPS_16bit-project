@@ -228,6 +228,18 @@ void ControlUnit::I_exec(int OpCode){
 			this->regDest = 0;
 			this->regWrite = 1;
 			break;
+		
+		case LUI:
+			this->ALUOp = 0;
+			this->ALUSrc = 1;
+			this->branch = 0;
+			this->jump = 0;
+			this->memRead = 0;
+			this->MemToReg = 0;
+			this->memWrite = 0;
+			this->regDest = 0;
+			this->regWrite = 1;
+			break;
                         
                 case BNE:
                     	this->ALUOp = 1;
