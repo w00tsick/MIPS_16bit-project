@@ -17,7 +17,7 @@ using namespace std;
 class RegProp {
 public:
     	string instruction;
-	int currentPC;
+	int instrPC;
 	int regRd;
 	int regRt;
 	int regRs;
