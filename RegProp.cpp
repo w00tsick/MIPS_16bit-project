@@ -17,7 +17,7 @@ RegProp::RegProp() {
 
 void RegProp::clear(void){
     	this->ALUResult = 0;
-	this->currentPC = 0;
+	this->instrPC = 0;
 	this->destRegister = 0;
 	this->instruction = "";
 	this->zeroBit = 0;
@@ -41,7 +41,7 @@ RegProp::~RegProp() {
 
 void RegProp::print(void){
     	cout<<this->ALUResult<<endl;
-	cout<<this->currentPC<<endl;
+	cout<<this->instrPC<<endl;
 	cout<<this->destRegister<<endl;
 	cout<<this->instruction<<endl;
 	cout<<this->zeroBit<<endl;
