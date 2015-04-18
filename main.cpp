@@ -36,6 +36,7 @@ string fetchInstr;
 int fetchPC = 0;
 //decode buffer update vars
 //still need controlsig globals
+int decodePC = 0;
 int decodeOpcode = 0;
 int decodeRs = 0;
 int decodeRt = 0;
@@ -49,24 +50,46 @@ int executeALUResult = 0;
 int executeZeroBit = 0;
 int executeJumpValue = 0;
 int executeBranchValue = 0;
-int executeSigBranch = 0;
+int executeWriteData = 0;
+int executeDest = 0;
 //memAccess buffer update vars
 int memAdd = 0;
 int memWriteData = 0;
+int memoryDest = 0;
 int flagW = 0;
 int flagR = 0;
-int memRData = 0;
+int memReadData = 0;
 
 //Signal placeholders
-int decodeSigALUOp;
-int decodeSigALUSrc;
-int decodeSigBranch;
-int decodeSigJump;
-int decodeSigMemRead;
-int decodeSigMemToReg;
-int decodeSigMemWrite;
-int decodeSigRegDest;
-int decodeSigRegWrite;
+int decodeSigALUOp = 0;
+int decodeSigALUSrc = 0;
+int decodeSigBranch = 0;
+int decodeSigJump = 0;
+int decodeSigMemRead = 0;
+int decodeSigMemToReg = 0;
+int decodeSigMemWrite = 0;
+int decodeSigRegDest = 0;
+int decodeSigRegWrite = 0;
+
+int executeSigALUOp = 0;
+int executeSigALUSrc = 0;
+int executeSigBranch = 0;
+int executeSigJump = 0;
+int executeSigMemRead = 0;
+int executeSigMemToReg = 0;
+int executeSigMemWrite = 0;
+int executeSigRegDest = 0;
+int executeSigRegWrite = 0;
+
+int memSigALUOp = 0;
+int memSigALUSrc = 0;
+int memSigBranch = 0;
+int memSigJump = 0;
+int memSigMemRead = 0;
+int memSigMemToReg = 0;
+int memSigMemWrite = 0;
+int memSigRegDest = 0;
+int memSigRegWrite = 0;
 
 //Global Obj
 RegProp IF_ID;
@@ -85,22 +108,56 @@ void I_instruct(int, int, int, int);
 void R_instruct(int, int, int);
 
 int main() {
+	IF_ID.instruction = "000000000000000";
+	IF_ID.instrPC = 0;
+	//decode buffer update vars
+	ID_EX.opCode = 0;
+	ID_EX.regRs = 0;
+	ID_EX.regRt = 0;
+	ID_EX.regRd = 0;
+	ID_EX.destRegister = 0;
+	ID_EX.address = 0;
+	ID_EX.regOut1 = 0;
+	ID_EX.regOut2 = 0;
+	ID_EX.sig->ALUOp = 0;
+	ID_EX.sig->ALUSrc = 0;
+	ID_EX.sig->branch = 0;
+	ID_EX.sig->jump = 0;
+	ID_EX.sig->memRead = 0;
+	ID_EX.sig->MemToReg = 0;
+	ID_EX.sig->memWrite = 0;
+	ID_EX.sig->regDest = 0;
+	ID_EX.sig->regWrite = 0;
+	//execute buffer update vars
+	MEM.ALUResult = 0;
+	MEM.zeroBit = 0;
+	MEM.jumpValue = 0;
+	MEM.branchValue = 0;
+	MEM.sig->branch = 0;
+	MEM.sig->jump = 0;
+	//memAccess buffer update vars
+	WB.address = 0;
+	WB.writeData = 0;
+	WB.writeFlag = 0;
+	WB.readFlag = 0;
+	WB.memReadData = 0;
 	cout << "entering main \n";
 	int clock = 0;
 
 	Registers[0] = 0x0000; //$zero
-	Registers[1] = 0x0001; //$t0
+	Registers[1] = 0x0008; //$t0
 	Registers[2] = 0x0008; //$t1
 	Registers[3] = 0x0005; //$t2
 	Registers[4] = 0x1010; //$a0
-	Registers[5] = 0xFF00; //$a1
+	Registers[5] = 0x0F00; //$a1
 	Registers[6] = 0x00FF; //$v0
 	Registers[7] = 0x00F0; //$v1
-
+	PC = 0;
 	for (int m = 0; m < 256; m++){
 		MemoryData[m] = 0;
 	}
 	MemoryData[255] = 10;
+	MemoryData[254] = 20;
 
 	ifstream input;
 	input.open("source.txt");
@@ -130,15 +187,13 @@ int main() {
 	cout << "entering while loop" << endl << endl << endl;
 
 	while (PC < instruct_count){
-		if (clock == 0) {
+		if (clock == 1) {
+			clock = 0;
 			fetch();
 			decode();
 			execute();
 			memAccess();
 			updateBuffer();
-			writeBack();
-			clock = 0;
-			PC++;
 			cout << "******************************" << endl;
 			cout << "Memory and Register Values:" << endl;
 			for (int m = 0; m < 256; m++){
@@ -152,7 +207,7 @@ int main() {
 			cout << endl;
 		}
 		else {
-
+			writeBack();
 			clock = 1;
 		}
 	}
@@ -160,28 +215,36 @@ int main() {
 }
 
 void fetch(){
+	cout << "******************************" << endl;
 	cout << "Entering fetch()" << endl;
 	//clear the properties
-	ID_EX.clear();
-	//get the instruction from instruction array
-	IF_ID.instruction = uniqueInstruct[PC];
+	//ID_EX.clear();
+	
 	//increase iteration of PC
-	IF_ID.currentPC = PC + 1;
-	cout << "Instruction: " << IF_ID.instruction << endl;
+	if ((MEM.sig->branch == 1) || (MEM.sig->jump == 1)) {
+		PC = MEM.jumpValue; //set pc to new instructions
+	}
+	//get the instruction from instruction array
+	fetchInstr = uniqueInstruct[PC];
+	cout << "Instruction " << PC << ": " << fetchInstr << endl;
+	PC++;
+	fetchPC = PC;
 }
 
 void decode(){
-	ID_EX = IF_ID;
-
+	//ID_EX = IF_ID;
 	bool I = false;
 	bool R = false;
 	bool J = false;
-	char *pointer;
+	char *pointer; 
+
 	cout << "******************************" << endl;
 	cout << "Entering Decode" << endl;
-	string opCode = ID_EX.instruction.substr(0, 4);
-	cout << "OpCode: " << opCode << endl;
+	string opCode = IF_ID.instruction.substr(0, 4);
+	cout << "OpCode: " << opCode << endl; 
 
+	//decodePC = IF_ID.instrPC;
+	//decodeSigJump = IF_ID.sig->jump;
 	for (int i = 0; i < sizeof(R_CODE) / sizeof(R_CODE[0]); i++){
 		if (opCode.compare(R_CODE[i]) == 0){
 			cout << "R type opCode \n";
@@ -210,56 +273,56 @@ void decode(){
 		}
 	}
 
-	ID_EX.opCode = strtol(ID_EX.instruction.substr(0, 4).c_str(), &pointer, 2);
+	decodeOpcode = strtol(IF_ID.instruction.substr(0, 4).c_str(), &pointer, 2);
 
 	if (R){
 		//R type
 		cout << "R type instruction: " << endl;
 		//get rs
-		ID_EX.regRs = strtol(ID_EX.instruction.substr(4, 3).c_str(), &pointer, 2);
-		cout << "regRs: " << ID_EX.regRs << endl;
+		decodeRs = strtol(IF_ID.instruction.substr(4, 3).c_str(), &pointer, 2);
+		cout << "regRs: " << decodeRs << endl;
 		//get rt
-		ID_EX.regRt = strtol(ID_EX.instruction.substr(7, 3).c_str(), &pointer, 2);
-		cout << "regRt: " << ID_EX.regRt << endl;
+		decodeRt = strtol(IF_ID.instruction.substr(7, 3).c_str(), &pointer, 2);
+		cout << "regRt: " << decodeRt << endl;
 		//get rd
-		ID_EX.regRd = strtol(ID_EX.instruction.substr(10, 3).c_str(), &pointer, 2);
-		cout << "regRd: " << ID_EX.regRd << endl;
+		decodeRd = strtol(IF_ID.instruction.substr(10, 3).c_str(), &pointer, 2);
+		cout << "regRd: " << decodeRd << endl;
 		//set destination register
-		ID_EX.destRegister = ID_EX.regRd;
+		decodeDest = decodeRd;
 		//set signal to R signal
-		ID_EX.sig->R_exec(ID_EX.opCode);
+		IF_ID.sig->R_exec(decodeOpcode);
 	}
 
 	else if (I){
 		//I type
 		cout << "I type instruction: " << endl;
 		//get rs
-		ID_EX.regRs = strtol(ID_EX.instruction.substr(4, 3).c_str(), &pointer, 2);
-		cout << "regRs: " << ID_EX.regRs << endl;
+		decodeRs = strtol(IF_ID.instruction.substr(4, 3).c_str(), &pointer, 2);
+		cout << "regRs: " << decodeRs << endl;
 		//get rt	
-		ID_EX.regRt = strtol(ID_EX.instruction.substr(7, 3).c_str(), &pointer, 2);
-		cout << "regRt: " << ID_EX.regRt << endl;
+		decodeRt = strtol(IF_ID.instruction.substr(7, 3).c_str(), &pointer, 2);
+		cout << "regRt: " << decodeRt << endl;
 		//get address for constant
-		ID_EX.address = strtol(ID_EX.instruction.substr(10, 6).c_str(), &pointer, 2);
-		cout << "address: " << ID_EX.address << endl;
+		decodeAddress = strtol(IF_ID.instruction.substr(10, 6).c_str(), &pointer, 2);
+		cout << "address: " << decodeAddress << endl;
 		//set destination register
-		ID_EX.destRegister = ID_EX.regRt;
+		decodeDest = decodeRt;
 		//set signal to I
-		ID_EX.sig->I_exec(ID_EX.opCode);
+		IF_ID.sig->I_exec(decodeOpcode);
 	}
 
 	else if (J){
 		//J type
 		cout << "J type instruction: " << endl;
-		ID_EX.address = strtol(ID_EX.instruction.substr(4, 12).c_str(), &pointer, 2);
-		ID_EX.sig->J_exec(ID_EX.opCode);
+		decodeAddress = strtol(IF_ID.instruction.substr(4, 12).c_str(), &pointer, 2);
+		IF_ID.sig->J_exec(decodeOpcode);
 	}
 	else{
 		//Error
 		cout << "THIS ADDRESS != R|I|J" << endl;
 	}
 	//save signals for updating buffer
-	/*decodeSigALUOp = IF_ID.sig->ALUOp;
+	decodeSigALUOp = IF_ID.sig->ALUOp;
 	decodeSigALUSrc = IF_ID.sig->ALUSrc;
 	decodeSigBranch = IF_ID.sig->branch;
 	decodeSigJump = IF_ID.sig->jump;
@@ -267,61 +330,93 @@ void decode(){
 	decodeSigMemToReg = IF_ID.sig->MemToReg;
 	decodeSigMemWrite = IF_ID.sig->memWrite;
 	decodeSigRegDest = IF_ID.sig->regDest;
-	decodeSigRegWrite = IF_ID.sig->regWrite;*/
+	decodeSigRegWrite = IF_ID.sig->regWrite;
 
-	ID_EX.regOut1 = Registers[ID_EX.regRs];
-	ID_EX.regOut2 = Registers[ID_EX.regRt];
-	cout << "Register File Output, Rs:" << ID_EX.regOut1 << ", Rt:" << ID_EX.regOut2 << endl;
+	decodeRegOut1 = Registers[decodeRs];
+	decodeRegOut2 = Registers[decodeRt];
+	cout << "Register File Output, Rs:" << decodeRegOut1 << ", Rt:" << decodeRegOut2 << endl;
 }
 
 void execute(){
 	cout << "******************************" << endl;
 	cout << "entering execute(): " << endl;
-	MEM = ID_EX;
+	//MEM = ID_EX;
 	//J format
+	//executeSig = ID_EX.sig;
+	//executeSigJump = ID_EX.sig->jump;
+	executeWriteData = ID_EX.regOut2;
+	executeSigALUOp = ID_EX.sig->ALUOp;
+	executeSigALUSrc = ID_EX.sig->ALUSrc;
+	executeSigBranch = ID_EX.sig->branch;
+	executeSigJump = ID_EX.sig->jump;
+	executeSigMemRead = ID_EX.sig->memRead;
+	executeSigMemToReg = ID_EX.sig->MemToReg;
+	executeSigMemWrite = ID_EX.sig->memWrite;
+	executeSigRegDest = ID_EX.sig->regDest;
+	executeSigRegWrite = ID_EX.sig->regWrite;
 
-	if (MEM.sig->jump == 1){
+	//regDest mux
+	if (ID_EX.sig->regDest == 0){
+		executeDest = ID_EX.regRt;
+	}
+	else {
+		executeDest = ID_EX.regRd;
+	}
+
+	if (ID_EX.sig->jump == 1){
 		//cout << "execute J instruction: " << endl;
-		J_instruct(MEM.opCode, MEM.address);
+		J_instruct(ID_EX.opCode, ID_EX.address);
 	}
 	else{
 		//R format
-		if (MEM.sig->ALUSrc == 0){
+		if (ID_EX.sig->ALUSrc == 0){
 			//cout << "execute R instruction: " << endl;
-			R_instruct(MEM.opCode, ID_EX.regOut1, ID_EX.regOut2);
+			R_instruct(ID_EX.opCode, ID_EX.regOut1, ID_EX.regOut2);
 		}
-		else if (MEM.sig->ALUSrc == 1){
+		else if (ID_EX.sig->ALUSrc == 1){
 			//I format
 			//cout << "Executing I format: " << endl;
-			I_instruct(MEM.opCode, ID_EX.regOut1, ID_EX.regOut2, MEM.address);
+			I_instruct(ID_EX.opCode, ID_EX.regOut1, ID_EX.regOut2, ID_EX.address);
 		}
 		else{
 			cout << "Execute Error!" << endl;
 		}
 	}
+
 }
 
 void memAccess(){
 
-	WB = MEM;
+	//WB = MEM;
+	//memorySig = MEM.sig;
 	cout << "******************************" << endl;
 	cout << "Entering Memory Access" << endl;
-	memAdd = MEM.address;
+	memAdd = MEM.ALUResult;
 	memWriteData = MEM.writeData;
 	cout << "memAdd: " << memAdd << endl;
 	cout << "memWriteData: " << memWriteData << endl;
 
 	flagW = MEM.writeFlag;
 	flagR = MEM.readFlag;
+	memoryDest = MEM.destRegister;
+	memSigALUOp = MEM.sig->ALUOp;
+	memSigALUSrc = MEM.sig->ALUSrc;
+	memSigBranch = MEM.sig->branch;
+	memSigJump = MEM.sig->jump;
+	memSigMemRead = MEM.sig->memRead;
+	memSigMemToReg = MEM.sig->MemToReg;
+	memSigMemWrite = MEM.sig->memWrite;
+	memSigRegDest = MEM.sig->regDest;
+	memSigRegWrite = MEM.sig->regWrite;
 
 	if (MEM.sig->memRead == 1){
 		if (MEM.ALUResult > 255){
 			cout << "ERROR: Read address exceeds memory" << endl;
 		}
 		else {
-			cout << "Memory Address for write" << MEM.ALUResult << endl;
-			WB.memReadData = MemoryData[MEM.ALUResult];
-			cout << "Writeback Read Data: " << WB.memReadData << endl;
+			cout << "Memory Address for read: " << MEM.ALUResult << endl;
+			memReadData = MemoryData[MEM.ALUResult];
+			cout << "Writeback Read Data: " << memReadData << endl;
 		}
 	}
 
@@ -330,7 +425,7 @@ void memAccess(){
 			cout << "ERROR: Write address exceeds memory" << endl;
 		}
 		else {
-			MemoryData[MEM.ALUResult] = MEM.regOut1;
+			MemoryData[MEM.ALUResult] = memWriteData;
 			cout << "Memory Data contents: " << MemoryData[MEM.ALUResult] << endl;
 		}
 	}
@@ -347,46 +442,24 @@ void writeBack(){
 	wData = WB.writeData;
 
 	//writeBack mux
-	if (WB.sig->jump != 1){
-		if (WB.sig->MemToReg == 0){
-			if (WB.sig->ALUSrc == 0){
-				//R format
-				cout << "entering R format WB: " << endl;
-				Registers[WB.regRd] = WB.ALUResult;
-			}
-			else{
-				cout << "entering I format WB: " << endl;
-				//I format
-				if (WB.sig->branch == 1){
-					cout << "Branching I format: " << endl;
-					PC = PC + mux1;
-				}
-				else if ((WB.opCode != 13) && (WB.opCode != 14)){ //prevent non taken branches from changing registers
-					cout << "Writing to memory: " << endl;
-					if (WB.sig->memWrite != 1){
-						Registers[WB.regRt] = WB.ALUResult;
-						cout << "Register contents: " << Registers[WB.regRt] << endl;
-					}
-				}
-			}
-		}
-		else {
-			Registers[WB.regRt] = WB.memReadData;
-			cout << "Writing " << WB.memReadData << " to Register " << WB.regRt << endl;
-		}
+	if (WB.sig->MemToReg == 1){
+		wData = mux0;
 	}
-	else{
-		//J format
-		cout << "entering J format WB: " << endl;
-		PC = WB.jumpValue - 1; //-1 for PC++ at end of clock cycle
+	else {
+		wData = mux1;
+	}
+	cout << "Writing to memory: " << endl;
+	if (WB.sig->regWrite == 1){
+		Registers[WB.destRegister] = wData;
+		cout << "Register contents: " << Registers[WB.destRegister] << endl;
 	}
 	return;
 }
 
 void R_instruct(int OpCode, int rs, int rt){
-	int rd;
+	int rd = 0;
 	//R instruction
-	switch (MEM.sig->ALUOp)
+	switch (ID_EX.sig->ALUOp)
 	{
 	case 1: //ADD
 		rd = rs + rt;
@@ -415,17 +488,17 @@ void R_instruct(int OpCode, int rs, int rt){
 		break;
 	}
 	//cout << "R_rd: " << rd << endl;
-	MEM.ALUResult = rd;
+	executeALUResult = rd;
 
 	if (rd == 0){
-		MEM.zeroBit = 1;
+		executeZeroBit = 1;
 	}
 }
 
 void J_instruct(int OpCode, int address){
 	if (address <= 4096) {//4 bit opCode + 12 bit address, 2^12 = 4096
-		cout << "Jumping to address " << address << endl;
-		MEM.jumpValue = address;
+		cout << "Jumping to address " << address + ID_EX.instrPC << endl;
+		executeJumpValue = address + ID_EX.instrPC;
 	}
 	else
 		cout << "ERR_J: invalid jump address" << endl;
@@ -433,44 +506,52 @@ void J_instruct(int OpCode, int address){
 
 void I_instruct(int OpCode, int rs, int rt, int address){
 	int r;
-	if (MEM.sig->ALUOp == 0){ // add Immediate, and LW, SW
+	if (ID_EX.sig->ALUOp == 0){ // add Immediate, and LW, SW
 		r = address + rt;
 		cout << "addi,lw,sw sum=" << r << endl;
 	}
-	if (MEM.sig->ALUOp == 6){ // SLL
+	if (ID_EX.sig->ALUOp == 6){ // SLL
 		r = (rt << address);
 		cout << "Executing SLL: Rt(" << rt << ") << constant(" << address << ") =" << r << endl;
 	}
-	if (MEM.sig->ALUOp == 7){ // SRL
+	if (ID_EX.sig->ALUOp == 7){ // SRL
 		r = (rt >> address);
 		cout << "Executing SRL: Rt(" << rt << ") >> constant(" << address << ") =" << r << endl;
 	}
 
-	if (MEM.sig->ALUOp == 1){ // BNE, BEQ
-		MEM.branchValue = address;
+	if (ID_EX.sig->ALUOp == 1){ // BNE, BEQ
+		executeJumpValue = address + ID_EX.instrPC;
 		r = rs - rt;
 	}
 	if (r == 0){
-		MEM.zeroBit = 1;
+		executeZeroBit = 1;
 		if (OpCode == 14){
 			//if the result is 0, they are equal, BNE no branch
-			MEM.sig->branch = 0;
+			executeSigBranch = 0;
+		}
+		else if (OpCode == 13) {
+			executeSigBranch = 1;
 		}
 	}
 	else{
-		if (OpCode == 13)
+		if (OpCode == 13){
 			//if the result is not 0, BEQ no branch
-			MEM.sig->branch = 0;
+			executeSigBranch = 0;
+		}
+		else if (OpCode == 14) {
+			executeSigBranch = 1;
+		}
 	}
 	//cout << "I_r: " << r << endl;
-	MEM.ALUResult = r;
+	executeALUResult = r;
 }
 
 void updateBuffer(){
-	/*//fetch buffer update vars
+	//fetch buffer update vars
 	IF_ID.instruction = fetchInstr;
-	IF_ID.currentPC = fetchPC;
+	IF_ID.instrPC = fetchPC;
 	//decode buffer update vars
+	ID_EX.instrPC = decodePC;
 	ID_EX.opCode = decodeOpcode;
 	ID_EX.regRs = decodeRs;
 	ID_EX.regRt = decodeRt;
@@ -493,11 +574,33 @@ void updateBuffer(){
 	MEM.zeroBit = executeZeroBit;
 	MEM.jumpValue = executeJumpValue;
 	MEM.branchValue = executeBranchValue;
+	MEM.writeData = executeWriteData;
+	MEM.destRegister = executeDest;
+	MEM.sig->ALUOp = executeSigALUOp;
+	MEM.sig->ALUSrc = executeSigALUSrc;
 	MEM.sig->branch = executeSigBranch;
+	MEM.sig->jump = executeSigJump;
+	MEM.sig->memRead = executeSigMemRead;
+	MEM.sig->MemToReg = executeSigMemToReg;
+	MEM.sig->memWrite = executeSigMemWrite;
+	MEM.sig->regDest = executeSigRegDest;
+	MEM.sig->regWrite = executeSigRegWrite;
 	//memAccess buffer update vars
+	WB.destRegister = memoryDest;
 	WB.address = memAdd;
 	WB.writeData = memWriteData;
 	WB.writeFlag = flagW;
 	WB.readFlag = flagR;
-	WB.memReadData = memRData;*/
+	WB.memReadData = memReadData;
+	WB.sig->branch = memSigBranch;
+	WB.sig->jump = memSigJump;
+	WB.sig->ALUOp = memSigALUOp;
+	WB.sig->ALUSrc = memSigALUSrc;
+	WB.sig->branch = memSigBranch;
+	WB.sig->jump = memSigJump;
+	WB.sig->memRead = memSigMemRead;
+	WB.sig->MemToReg = memSigMemToReg;
+	WB.sig->memWrite = memSigMemWrite;
+	WB.sig->regDest = memSigRegDest;
+	WB.sig->regWrite = memSigRegWrite;
 }
