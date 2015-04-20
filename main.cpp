@@ -91,6 +91,10 @@ int memSigMemWrite = 0;
 int memSigRegDest = 0;
 int memSigRegWrite = 0;
 
+//forwarding and hazard variables
+int wData = 0;
+int IFIDWrite = 0;
+
 //Global Obj
 RegProp IF_ID;
 RegProp ID_EX;
@@ -217,8 +221,6 @@ int main() {
 void fetch(){
 	cout << "******************************" << endl;
 	cout << "Entering fetch()" << endl;
-	//clear the properties
-	//ID_EX.clear();
 	
 	//increase iteration of PC
 	if ((MEM.sig->branch == 1) || (MEM.sig->jump == 1)) {
@@ -243,8 +245,6 @@ void decode(){
 	string opCode = IF_ID.instruction.substr(0, 4);
 	cout << "OpCode: " << opCode << endl; 
 
-	//decodePC = IF_ID.instrPC;
-	//decodeSigJump = IF_ID.sig->jump;
 	for (int i = 0; i < sizeof(R_CODE) / sizeof(R_CODE[0]); i++){
 		if (opCode.compare(R_CODE[i]) == 0){
 			cout << "R type opCode \n";
@@ -321,16 +321,36 @@ void decode(){
 		//Error
 		cout << "THIS ADDRESS != R|I|J" << endl;
 	}
-	//save signals for updating buffer
-	decodeSigALUOp = IF_ID.sig->ALUOp;
-	decodeSigALUSrc = IF_ID.sig->ALUSrc;
-	decodeSigBranch = IF_ID.sig->branch;
-	decodeSigJump = IF_ID.sig->jump;
-	decodeSigMemRead = IF_ID.sig->memRead;
-	decodeSigMemToReg = IF_ID.sig->MemToReg;
-	decodeSigMemWrite = IF_ID.sig->memWrite;
-	decodeSigRegDest = IF_ID.sig->regDest;
-	decodeSigRegWrite = IF_ID.sig->regWrite;
+	
+	//hazard detection unit
+	if (ID_EX.sig->memRead && ((ID_EX.regRt == decodeRs) || (ID_EX.regRt == decodeRt))){
+		cout << "Data hazard. Inserting Nop." << endl;
+		decodeSigALUOp = 0;
+		decodeSigALUSrc = 0;
+		decodeSigBranch = 0;
+		decodeSigJump = 0;
+		decodeSigMemRead = 0;
+		decodeSigMemToReg = 0;
+		decodeSigMemWrite = 0;
+		decodeSigRegDest = 0;
+		decodeSigRegWrite = 0;
+		PC--;
+		IFIDWrite = 0;
+
+	}
+	else {
+		//save signals for updating buffer
+		decodeSigALUOp = IF_ID.sig->ALUOp;
+		decodeSigALUSrc = IF_ID.sig->ALUSrc;
+		decodeSigBranch = IF_ID.sig->branch;
+		decodeSigJump = IF_ID.sig->jump;
+		decodeSigMemRead = IF_ID.sig->memRead;
+		decodeSigMemToReg = IF_ID.sig->MemToReg;
+		decodeSigMemWrite = IF_ID.sig->memWrite;
+		decodeSigRegDest = IF_ID.sig->regDest;
+		decodeSigRegWrite = IF_ID.sig->regWrite;
+		IFIDWrite = 1;
+	}
 
 	decodeRegOut1 = Registers[decodeRs];
 	decodeRegOut2 = Registers[decodeRt];
@@ -340,10 +360,7 @@ void decode(){
 void execute(){
 	cout << "******************************" << endl;
 	cout << "entering execute(): " << endl;
-	//MEM = ID_EX;
 	//J format
-	//executeSig = ID_EX.sig;
-	//executeSigJump = ID_EX.sig->jump;
 	executeWriteData = ID_EX.regOut2;
 	executeSigALUOp = ID_EX.sig->ALUOp;
 	executeSigALUSrc = ID_EX.sig->ALUSrc;
@@ -436,7 +453,7 @@ void memAccess(){
 void writeBack(){
 	cout << "******************************" << endl;
 	cout << "Entering WriteBack: " << endl;
-	int mux0, mux1, wData, wAddress;
+	int mux0, mux1, wAddress;
 	mux0 = WB.memReadData;
 	mux1 = WB.address;
 	wData = WB.writeData;
@@ -458,6 +475,32 @@ void writeBack(){
 
 void R_instruct(int OpCode, int rs, int rt){
 	int rd = 0;
+	
+		//EX forwarding check
+	if (MEM.sig->regWrite && (MEM.destRegister != 0) && (MEM.destRegister == ID_EX.regRs)){
+		//forward A = 10
+		cout << "forward A = 10" << endl;
+		rs = MEM.ALUResult;
+	}
+	if (MEM.sig->regWrite && (MEM.destRegister != 0) && (MEM.destRegister == ID_EX.regRt)){
+		//forward B = 10
+		cout << "forward B = 10" << endl;
+		rt = MEM.ALUResult;
+	}
+	//MEM forwarding check
+	if (WB.sig->regWrite && (WB.destRegister != 0) && (WB.destRegister == ID_EX.regRs)
+		&& !(MEM.sig->regWrite && (MEM.regRd != 0) && (MEM.regRd == ID_EX.regRs))){
+		//forward A = 01
+		cout << "forward A = 01" << endl;
+		rs = wData;
+	}
+	if (WB.sig->regWrite && (WB.destRegister != 0) && (WB.destRegister == ID_EX.regRt)
+		&& !(MEM.sig->regWrite && (MEM.regRd != 0) && (MEM.regRd == ID_EX.regRt))) {
+		//forward B = 01
+		cout << "forward B = 01" << endl;
+		rt = wData;
+	}
+	
 	//R instruction
 	switch (ID_EX.sig->ALUOp)
 	{
@@ -506,6 +549,31 @@ void J_instruct(int OpCode, int address){
 
 void I_instruct(int OpCode, int rs, int rt, int address){
 	int r;
+	//EX forwarding check
+	if (MEM.sig->regWrite && (MEM.destRegister != 0) && (MEM.destRegister == ID_EX.regRs)){
+		//forward A = 10
+		cout << "forward A = 10" << endl;
+		rs = MEM.ALUResult;
+	}
+	if (MEM.sig->regWrite && (MEM.destRegister != 0) && (MEM.destRegister == ID_EX.regRt)){
+		//forward B = 10
+		cout << "forward B = 10" << endl;
+		rt = MEM.ALUResult;
+	}
+	//MEM forwarding check
+	if (WB.sig->regWrite && (WB.destRegister != 0) && (WB.destRegister == ID_EX.regRs)
+		&& !(MEM.sig->regWrite && (MEM.regRd != 0) && (MEM.regRd == ID_EX.regRs))){
+		//forward A = 01
+		cout << "forward A = 01" << endl;
+		rs = wData;
+	}
+	if (WB.sig->regWrite && (WB.destRegister != 0) && (WB.destRegister == ID_EX.regRt)
+		&& !(MEM.sig->regWrite && (MEM.regRd != 0) && (MEM.regRd == ID_EX.regRt))) {
+		//forward B = 01
+		cout << "forward B = 01" << endl;
+		rt = wData;
+	}
+
 	if (ID_EX.sig->ALUOp == 0){ // add Immediate, and LW, SW
 		r = address + rt;
 		cout << "addi,lw,sw sum=" << r << endl;
@@ -547,9 +615,11 @@ void I_instruct(int OpCode, int rs, int rt, int address){
 }
 
 void updateBuffer(){
-	//fetch buffer update vars
-	IF_ID.instruction = fetchInstr;
-	IF_ID.instrPC = fetchPC;
+	if (IFIDWrite == 1){
+		//fetch buffer update vars
+		IF_ID.instruction = fetchInstr;
+		IF_ID.instrPC = fetchPC;
+	}
 	//decode buffer update vars
 	ID_EX.instrPC = decodePC;
 	ID_EX.opCode = decodeOpcode;
