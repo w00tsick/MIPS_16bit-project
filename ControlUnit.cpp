@@ -15,7 +15,7 @@
 #define AND	(3)
 #define OR	(4)
 #define NOT	(5)
-#define XOR	(6) //broken
+#define XOR	(6)
 #define LW	(7)
 #define SW	(8)
 #define LUI	(9)
@@ -24,6 +24,7 @@
 #define JMP	(12)
 #define BEQ	(13)
 #define BNE	(14)
+#define SLT     (15)
 
 using namespace std;
 
@@ -125,6 +126,18 @@ void ControlUnit::R_exec(int OpCode){
 
 		case XOR:
 			this->ALUOp = 6;
+			this->ALUSrc = 0;
+			this->branch = 0;
+			this->jump = 0;
+			this->memRead = 0;
+			this->MemToReg = 0;
+			this->memWrite = 0;
+			this->regDest = 1;
+			this->regWrite = 1;
+			break;
+                        
+		case SLT:
+			this->ALUOp = 7;
 			this->ALUSrc = 0;
 			this->branch = 0;
 			this->jump = 0;

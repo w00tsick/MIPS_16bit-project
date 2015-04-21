@@ -527,9 +527,18 @@ void R_instruct(int OpCode, int rs, int rt){
 		break;
 	case 6: //xor
 		rd = (rs & 0xFFFF) ^ (rt & 0xFFFF);
-		cout << "Executing Xor: Rs(" << rs << ") Xor Rt(" << rt << ") =" << rd << endl;
+		
 		break;
-	}
+        case 7: //slt
+                rd = (rs - rt);
+                if(rd > 0){
+                    rd = 1;
+                }else if(rd < 0){
+                    rd = 0;
+                }
+                cout << "Executing SLT: Rs(" << rs << ") SLT Rt(" << rt << ") =" << rd << endl;
+                break;
+        }
 	//cout << "R_rd: " << rd << endl;
 	executeALUResult = rd;
 
