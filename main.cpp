@@ -149,19 +149,22 @@ int main() {
 	int clock = 0;
 
 	Registers[0] = 0x0000; //$zero
-	Registers[1] = 0x0008; //$t0
-	Registers[2] = 0x0008; //$t1
-	Registers[3] = 0x0005; //$t2
-	Registers[4] = 0x1010; //$a0
-	Registers[5] = 0x0F00; //$a1
-	Registers[6] = 0x00FF; //$v0
-	Registers[7] = 0x00F0; //$v1
+	Registers[1] = 0x0040; //$v0
+	Registers[2] = 0x1010; //$v1
+	Registers[3] = 0x000F; //$v2
+	Registers[4] = 0x00F0; //$v3
+	Registers[5] = 0x0000; //$t0
+	Registers[6] = 0x0010; //$a0
+	Registers[7] = 0x0005; //$a1
 	PC = 0;
 	for (int m = 0; m < 256; m++){
 		MemoryData[m] = 0;
 	}
-	MemoryData[255] = 10;
-	MemoryData[254] = 20;
+	MemoryData[Registers[5]]     = 0x0101;
+        MemoryData[Registers[5] + 2] = 0x0110;
+        MemoryData[Registers[5] + 4] = 0x0011;
+        MemoryData[Registers[5] + 6] = 0x00F0;
+        MemoryData[Registers[5] + 8] = 0x00FF;
 
 	ifstream input;
 	input.open("source.txt");
