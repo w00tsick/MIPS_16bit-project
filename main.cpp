@@ -25,7 +25,7 @@ string I_CODE[] = { "0000", "0111", "1000", "1001", "1010", "1011", "1101", "111
 string J_CODE[] = { "1100" };
 
 //Global variables
-int Registers[8];
+int Registers[9];
 int PC = 0x0000;
 int instruct_count = 0;
 int Tot_Reg = 8;
@@ -154,17 +154,18 @@ int main() {
 	Registers[3] = 0x000F; //$v2
 	Registers[4] = 0x00F0; //$v3
 	Registers[5] = 0x0000; //$t0
-	Registers[6] = 0x0010; //$a0
-	Registers[7] = 0x0005; //$a1
+        Registers[6] = 0x0000; //$t1
+	Registers[7] = 0x0010; //$a0
+	Registers[8] = 0x0005; //$a1
 	PC = 0;
 	for (int m = 0; m < 256; m++){
 		MemoryData[m] = 0;
 	}
-	MemoryData[Registers[6]]     = 0x0101;
-        MemoryData[Registers[6] + 2] = 0x0110;
-        MemoryData[Registers[6] + 4] = 0x0011;
-        MemoryData[Registers[6] + 6] = 0x00F0;
-        MemoryData[Registers[6] + 8] = 0x00FF;
+	MemoryData[Registers[7]]     = 0x0101;
+        MemoryData[Registers[7] + 2] = 0x0110;
+        MemoryData[Registers[7] + 4] = 0x0011;
+        MemoryData[Registers[7] + 6] = 0x00F0;
+        MemoryData[Registers[7] + 8] = 0x00FF;
 
 	ifstream input;
 	input.open("source.txt");
@@ -208,7 +209,7 @@ int main() {
 					cout << "Memory Address " << m << "= " << MemoryData[m] << endl;
 				}
 			}
-			for (int z = 0; z < 8; z++){
+			for (int z = 0; z < 9; z++){
 				cout << "Register " << z << " = " << Registers[z] << endl;
 			}
 			cout << endl;
