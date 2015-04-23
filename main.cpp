@@ -194,7 +194,7 @@ int main() {
 
 	cout << "entering while loop" << endl << endl << endl;
 
-	while (PC < instruct_count){
+	while (PC < instruct_count + 3){
 		if (clock == 1) {
 			clock = 0;
 			fetch();
@@ -226,10 +226,16 @@ void fetch(){
 	cout << "******************************" << endl;
 	cout << "Entering fetch()" << endl;
 	
+
 	//increase iteration of PC
-	if ((MEM.sig->branch == 1) || (MEM.sig->jump == 1)) {
-		PC = MEM.jumpValue; //set pc to new instructions
-	}
+	if ((MEM.sig->branch == 1)) {
+            cout << "PC: " << PC << endl;
+            cout << "Jump Value: " << MEM.jumpValue << endl;
+		PC = PC - 3 + MEM.jumpValue; //set pc to new instructions
+                cout << "PC after jump: " << PC << endl;
+	}else if((MEM.sig->jump == 1)){
+            PC = MEM.jumpValue; //set pc to new instructions
+        }
 	//get the instruction from instruction array
 	fetchInstr = uniqueInstruct[PC];
 	cout << "Instruction " << PC << ": " << fetchInstr << endl;
