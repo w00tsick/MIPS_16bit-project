@@ -146,7 +146,7 @@ int main() {
 	WB.readFlag = 0;
 	WB.memReadData = 0;
 	cout << "entering main \n";
-	int clock = 0;
+	int clock = 1;
 
 	Registers[0] = 0x0000; //$zero
 	Registers[1] = 0x0040; //$v0
