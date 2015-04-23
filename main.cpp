@@ -20,7 +20,7 @@ using namespace std;
 */
 
 //define OpCodes
-string R_CODE[] = { "0001", "0010", "0011", "0100", "0101", "0110" };
+string R_CODE[] = { "0001", "0010", "0011", "0100", "0101", "0110", "1111" };
 string I_CODE[] = { "0000", "0111", "1000", "1001", "1010", "1011", "1101", "1110" };
 string J_CODE[] = { "1100" };
 
@@ -160,11 +160,11 @@ int main() {
 	for (int m = 0; m < 256; m++){
 		MemoryData[m] = 0;
 	}
-	MemoryData[Registers[5]]     = 0x0101;
-        MemoryData[Registers[5] + 2] = 0x0110;
-        MemoryData[Registers[5] + 4] = 0x0011;
-        MemoryData[Registers[5] + 6] = 0x00F0;
-        MemoryData[Registers[5] + 8] = 0x00FF;
+	MemoryData[Registers[6]]     = 0x0101;
+        MemoryData[Registers[6] + 2] = 0x0110;
+        MemoryData[Registers[6] + 4] = 0x0011;
+        MemoryData[Registers[6] + 6] = 0x00F0;
+        MemoryData[Registers[6] + 8] = 0x00FF;
 
 	ifstream input;
 	input.open("source.txt");
@@ -282,13 +282,13 @@ void decode(){
 		//R type
 		cout << "R type instruction: " << endl;
 		//get rs
-		decodeRs = strtol(IF_ID.instruction.substr(4, 3).c_str(), &pointer, 2);
+		decodeRs = strtol(IF_ID.instruction.substr(4, 4).c_str(), &pointer, 2);
 		cout << "regRs: " << decodeRs << endl;
 		//get rt
-		decodeRt = strtol(IF_ID.instruction.substr(7, 3).c_str(), &pointer, 2);
+		decodeRt = strtol(IF_ID.instruction.substr(8, 4).c_str(), &pointer, 2);
 		cout << "regRt: " << decodeRt << endl;
 		//get rd
-		decodeRd = strtol(IF_ID.instruction.substr(10, 3).c_str(), &pointer, 2);
+		decodeRd = strtol(IF_ID.instruction.substr(12, 4).c_str(), &pointer, 2);
 		cout << "regRd: " << decodeRd << endl;
 		//set destination register
 		decodeDest = decodeRd;
@@ -300,13 +300,13 @@ void decode(){
 		//I type
 		cout << "I type instruction: " << endl;
 		//get rs
-		decodeRs = strtol(IF_ID.instruction.substr(4, 3).c_str(), &pointer, 2);
+		decodeRs = strtol(IF_ID.instruction.substr(4, 4).c_str(), &pointer, 2);
 		cout << "regRs: " << decodeRs << endl;
 		//get rt	
-		decodeRt = strtol(IF_ID.instruction.substr(7, 3).c_str(), &pointer, 2);
+		decodeRt = strtol(IF_ID.instruction.substr(8, 4).c_str(), &pointer, 2);
 		cout << "regRt: " << decodeRt << endl;
 		//get address for constant
-		decodeAddress = strtol(IF_ID.instruction.substr(10, 6).c_str(), &pointer, 2);
+		decodeAddress = strtol(IF_ID.instruction.substr(12, 4).c_str(), &pointer, 2);
 		cout << "address: " << decodeAddress << endl;
 		//set destination register
 		decodeDest = decodeRt;
@@ -535,9 +535,9 @@ void R_instruct(int OpCode, int rs, int rt){
         case 7: //slt
                 rd = (rs - rt);
                 if(rd > 0){
-                    rd = 1;
-                }else if(rd < 0){
                     rd = 0;
+                }else if(rd < 0){
+                    rd = 1;
                 }
                 cout << "Executing SLT: Rs(" << rs << ") SLT Rt(" << rt << ") =" << rd << endl;
                 break;
