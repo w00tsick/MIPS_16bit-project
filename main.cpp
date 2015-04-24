@@ -475,10 +475,8 @@ void writeBack(){
 	else {
 		wData = mux1;
 	}
-	cout << "Writing to memory: " << endl;
 	if (WB.sig->regWrite == 1){
 		Registers[WB.destRegister] = wData;
-		cout << "Register contents: " << Registers[WB.destRegister] << endl;
 	}
 	return;
 }
