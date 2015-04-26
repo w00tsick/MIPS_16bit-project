@@ -194,7 +194,7 @@ int main() {
 
 	cout << "entering while loop" << endl << endl << endl;
 
-	while (PC < instruct_count + 3){
+	while (PC < instruct_count + 1){
 		if (clock == 1) {
 			clock = 0;
 			fetch();
@@ -591,10 +591,16 @@ void I_instruct(int OpCode, int rs, int rt, int address){
 		rt = wData;
 	}
 
-	if (ID_EX.sig->ALUOp == 0){ // add Immediate, and LW, SW
+	if (ID_EX.sig->ALUOp == 0 && ID_EX.sig->MemToReg == 0 && ID_EX.sig->memWrite == 0){ // add Immediate
 		r = address + rt;
-		cout << "addi,lw,sw sum=" << r << endl;
-	}
+		cout << "addi sum= " << r << endl;
+	}else if(ID_EX.sig->ALUOp == 0 && ID_EX.sig->MemToReg == 1){ //LW
+            r = address + rs;
+            cout << "lw address = " << r << endl;
+        } else if(ID_EX.sig->ALUOp == 0 && ID_EX.sig->memWrite == 1){ // SW
+            r = address + rs;
+            cout << "sw address = " << r << endl;
+        }
 	if (ID_EX.sig->ALUOp == 6){ // SLL
 		r = (rt << address);
 		cout << "Executing SLL: Rt(" << rt << ") << constant(" << address << ") =" << r << endl;
