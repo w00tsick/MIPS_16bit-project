@@ -535,7 +535,7 @@ void R_instruct(int OpCode, int rs, int rt){
 		break;
 	case 6: //xor
 		rd = (rs & 0xFFFF) ^ (rt & 0xFFFF);
-		
+                cout << "Executing xor: Rs(" << rs << ") ^^ Rt(" << rt << ") =" << rd << endl;
 		break;
         case 7: //slt
                 rd = (rs - rt);
